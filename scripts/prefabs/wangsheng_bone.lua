@@ -1,13 +1,13 @@
 local GLOBAL = _G
 
 local assets = {
-    资源("ATLAS", "images/inventoryimages/wangsheng_bone.xml"),
-    资源("IMAGE", "images/inventoryimages/wangsheng_bone.tex"),
+    Asset("ATLAS", "images/inventoryimages/wangsheng_bone.xml"),
+    Asset("IMAGE", "images/inventoryimages/wangsheng_bone.tex"),
 }
 
-本地函数 fn()
-    本地实例 = GLOBAL.CreateEntity()
-    实例.entity:AddTransform()
+local function fn()
+    local inst = GLOBAL.CreateEntity()
+    inst.entity:AddTransform()
     inst.entity:AddAnimState()
     inst.entity:AddNetwork()
 
@@ -17,13 +17,12 @@ local assets = {
     inst.AnimState:SetScale(1.1, 1.1, 1)
 
     inst:AddTag("TOOL")
-    inst:AddTag("NOCLICK")
     inst:AddTag("nosteal")
 
     inst.entity:SetPristine()
-    如果 not GLOBAL.TheWorld.ismastersim 那么
-        返回 实例
-    结束
+    if not GLOBAL.TheWorld.ismastersim then
+        return inst
+    end
 
     inst.death_x = nil
     inst.death_z = nil
@@ -36,29 +35,31 @@ local assets = {
     inst.components.inventoryitem:SetCanOnlyGoInPocket(true)
 
     inst:AddComponent("inspectable")
-    inst.components.inspectable.getspecialdescription = 函数(inst)
-        如果 inst.player_name 那么
-            返回 字符串.format("前往%s陨落的地点，使用后将会消散", inst.player_name)
-        结束
-        返回 "往生信物"
-    结束
+    inst.components.inspectable.getspecialdescription = function(inst)
+        if inst.player_name then
+            return string.format("Travel to the place where %s fell. It will vanish after use.", inst.player_name)
+        end
+        return "A keepsake that guides you to a lost one's final place."
+    end
 
-    inst.AddComponent("可交易")
+    inst:AddComponent("tradable")
 
-    inst.OnSave = 函数(inst, 数据)
-        数据.death_x = inst.death_x
-        数据.death_z = inst.death_z
+    inst.OnSave = function(inst, data)
+        data.death_x = inst.death_x
+        data.death_z = inst.death_z
         data.player_name = inst.player_name
-    结束
-    inst.OnLoad = 函数(inst, data)
-        如果 data 那么
+        data.owner_userid = inst.owner_userid
+    end
+    inst.OnLoad = function(inst, data)
+        if data then
             inst.death_x = data.death_x
             inst.death_z = data.death_z
             inst.player_name = data.player_name
-        结束
-    结束
+            inst.owner_userid = data.owner_userid
+        end
+    end
 
-    返回 实例
-结束
+    return inst
+end
 
-返回 GLOBAL.Prefab("wangsheng_bone", fn, assets)
+return GLOBAL.Prefab("wangsheng_bone", fn, assets)
