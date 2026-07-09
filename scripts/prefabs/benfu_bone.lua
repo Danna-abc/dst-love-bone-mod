@@ -17,7 +17,6 @@ local function fn()
     inst.AnimState:SetScale(1.2, 1.2, 1)
 
     inst:AddTag("TOOL")
-    inst:AddTag("NOCLICK")
     inst:AddTag("nosteal")
 
     inst.entity:SetPristine()
@@ -36,9 +35,9 @@ local function fn()
     inst:AddComponent("inspectable")
     inst.components.inspectable.getspecialdescription = function(inst)
         if inst.player_name then
-            return string.format("羁绊信物，随时奔赴%s的身边，可反复使用", inst.player_name)
+            return string.format("A bond that lets you rush to %s's side, again and again.", inst.player_name)
         end
-        return "奔赴信物"
+        return "An eternal keepsake, always leading you to your bond."
     end
 
     inst:AddComponent("tradable")
@@ -54,7 +53,7 @@ local function fn()
         end
     end
 
-    返回实例
-结束
+    return inst
+end
 
 return GLOBAL.Prefab("benfu_bone", fn, assets)
