@@ -1,3 +1,8 @@
+PrefabFiles = {
+    "wangsheng_bone",
+    "benfu_bone"
+}
+
 local GLOBAL = _G
 local require = GLOBAL.require
 local Vector3 = GLOBAL.Vector3
@@ -15,13 +20,11 @@ ACT_WANGSHENG.id = "USE_WANGSHENG"
 ACT_WANGSHENG.str = "Use Wangsheng Bone"
 ACT_WANGSHENG.fn = function(act)
     if not TheWorld.ismastersim then return true end
-
     local user = act.doer
     local bone = act.invobject
     if not bone or not bone.death_x or not bone.death_z then
         return false
     end
-
     local x, z = bone.death_x, bone.death_z
     if TheWorld.Map:IsOceanAtPoint(x, 0, z) then
         if user.components.talker then
@@ -29,20 +32,17 @@ ACT_WANGSHENG.fn = function(act)
         end
         return false
     end
-
     local offset = FindWalkableOffset(Vector3(x,0,z), math.random()*PI*2, 10, 12, false, true)
     if offset then
         x = x + offset.x
         z = z + offset.z
     end
-
     if TheWorld.Map:IsOceanAtPoint(x, 0, z) then
         if user.components.talker then
             user.components.talker:Say("Landing point is at ocean, teleport failed")
         end
         return false
     end
-
     user.Transform:SetPosition(x, 0, z)
     bone:Remove()
     return true
@@ -54,13 +54,11 @@ ACT_BENFU.id = "USE_BENFU"
 ACT_BENFU.str = "Use Benfu Bone"
 ACT_BENFU.fn = function(act)
     if not TheWorld.ismastersim then return true end
-
     local user = act.doer
     local bone = act.invobject
     if not bone or not bone.owner_userid then
         return false
     end
-
     local target = nil
     for _, player in ipairs(AllPlayers) do
         if player.userid == bone.owner_userid then
@@ -74,7 +72,6 @@ ACT_BENFU.fn = function(act)
         end
         return false
     end
-
     local x, z = target.Transform:GetWorldXZ()
     if TheWorld.Map:IsOceanAtPoint(x, 0, z) then
         if user.components.talker then
@@ -82,20 +79,17 @@ ACT_BENFU.fn = function(act)
         end
         return false
     end
-
     local offset = FindWalkableOffset(Vector3(x,0,z), math.random()*PI*2, 10, 12, false, true)
     if offset then
         x = x + offset.x
         z = z + offset.z
     end
-
     if TheWorld.Map:IsOceanAtPoint(x, 0, z) then
         if user.components.talker then
             user.components.talker:Say("Landing point is at ocean, teleport failed")
         end
         return false
     end
-
     user.Transform:SetPosition(x, 0, z)
     return true
 end
@@ -177,14 +171,3 @@ AddPrefabPostInit("benfu_bone", function(inst)
         end
     end)
 end)
-
-local function SafeRegisterPrefab(name, path)
-    local ok, prefab_data = pcall(require, path)
-    if ok then
-        RegisterPrefab(name, prefab_data)
-    else
-        print("[love_bone_mod ERROR] Missing prefab file: " .. path)
-    end
-end
-SafeRegisterPrefab("wangsheng_bone", "scripts/prefabs/wangsheng_bone")
-SafeRegisterPrefab("benfu_bone", "scripts/prefabs/benfu_bone")
