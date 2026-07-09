@@ -72,7 +72,7 @@ ACT_BENFU.fn = function(act)
         end
         return false
     end
-    local x, z = target.Transform:GetWorldXZ()
+    local x, y, z = target.Transform:GetWorldPosition()
     if TheWorld.Map:IsOceanAtPoint(x, 0, z) then
         if user.components.talker then
             user.components.talker:Say("Target is at ocean, cannot teleport")
@@ -105,24 +105,19 @@ GLOBAL.AddStategraphPostInit("wilson_client", HookStateGraph)
 AddPlayerPostInit(function(inst)
     local function OnBecameGhost()
         if not TheWorld.ismastersim then return end
-        inst:DoTaskInTime(0.2, function()
+        inst:DoTaskInTime(0.5, function()
             local px, py, pz = inst.Transform:GetWorldPosition()
-            local ents = TheSim:FindEntities(px, py, pz, 30, {"skeleton"})
-            local nearest = nil
-            local min_dist = math.huge
+            local ents = TheSim:FindEntities(px, py, pz, 3, {"skeleton"})
+            local target_skel = nil
             for _, ent in ipairs(ents) do
-                if ent.prefab == "skeleton" and not ent.owner_userid then
-                    local dx, dz = ent.Transform:GetWorldXZ()
-                    local dist_sq = (dx - px)*(dx - px) + (dz - pz)*(dz - pz)
-                    if dist_sq < min_dist then
-                        min_dist = dist_sq
-                        nearest = ent
-                    end
+                if ent.prefab == "skeleton" and not ent:HasTag("skeleton_ruins") then
+                    target_skel = ent
+                    break
                 end
             end
-            if nearest then
-                nearest.owner_userid = inst.userid
-                nearest.player_name = inst:GetDisplayName()
+            if target_skel then
+                target_skel.owner_userid = inst.userid
+                target_skel.player_name = inst:GetDisplayName()
             end
         end)
     end
@@ -132,42 +127,43 @@ end)
 AddPrefabPostInit("skeleton", function(inst)
     if not TheWorld.ismastersim then return end
     inst:ListenForEvent("workfinished", function()
-        if not inst.owner_userid or inst:HasTag("skeleton_ruins") then
-            return
-        end
-        local x, y, z = inst.Transform:GetWorldPosition()
-        local uid = inst.owner_userid
-        local name = inst.player_name or "Stranger"
-        local bone1 = SpawnPrefab("wangsheng_bone")
-        if bone1 then
-            bone1.Transform:SetPosition(x, y, z)
-            bone1.death_x = x
-            bone1.death_z = z
-            bone1.player_name = name
-            bone1.owner_userid = uid
-        end
-        if math.random() <= 0.52 then
-            local bone2 = SpawnPrefab("benfu_bone")
-            if bone2 then
-                bone2.Transform:SetPosition(x, y, z)
-                bone2.owner_userid = uid
-                bone2.player_name = name
+        -- 不拦截原生掉落，游戏正常产出2片普通骨片
+        if inst.owner_userid ~= nil and not inst:HasTag("skeleton_ruins") then
+            local x, y, z = inst.Transform:GetWorldPosition()
+            local uid = inst.owner_userid
+            local name = inst.player_name or "Stranger"
+            
+            -- 必掉往生骨片（额外追加）
+            local bone1 = SpawnPrefab("wangsheng_bone")
+            if bone1 then
+                bone1.Transform:SetPosition(x, y, z)
+                bone1.death_x = x
+                bone1.death_z = z
+                bone1.player_name = name
+                bone1.owner_userid = uid
             end
-        end
-    end)
-end)
-
-AddPrefabPostInit("wangsheng_bone", function(inst)
-    inst:DoTaskInTime(0, function()
-        if inst.components.inventoryitem then
-            inst.components.inventoryitem:AddAction(ACT_WANGSHENG)
-        end
-    end)
-end)
-AddPrefabPostInit("benfu_bone", function(inst)
-    inst:DoTaskInTime(0, function()
-        if inst.components.inventoryitem then
-            inst.components.inventoryitem:AddAction(ACT_BENFU)
-        end
-    end)
-end)
+            -- 52%概率追加奔赴骨片
+            if math.random() <= 0.52 then
+                local bone2 = SpawnPrefab("benfu_bone")
+                if bone2 then
+                    bone2.Transform:SetPosition(x, y, z)
+                    bone2.owner_userid = uid
+                     bone2.player_name = name
+                 end
+             end
+         end
+     end)
+ end)
+ AddPrefabPostInit("wangsheng_bone", function(inst)
+     inst:DoTaskInTime(0.01, function()
+         if inst.components.inventoryitem then
+             inst.components.inventoryitem:AddAction(ACT_WANGSHENG)
+         end
+     end)
+ end)
+ AddPrefabPostInit("benfu_bone", function(inst)
+     inst:DoTaskInTime(0.01, function()
+         if inst.components.inventoryitem then
+             inst.components.inventoryitem:AddAction(ACT_BENFU)
+         end
+     end)
