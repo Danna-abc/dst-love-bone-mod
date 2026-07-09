@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Atlas>
+    <Texture filename="TexOutput.tex"/>
+    <Elements>
+        <Element name="bf.tex" u1="0.000976563" u2="0.499023" v1="0.00195313" v2="0.998047"/>
+        <Element name="ws.tex" u1="0.500977" u2="0.999023" v1="0.00195313" v2="0.998047"/>
+    </Elements>
+    <StraightAlpha>false</StraightAlpha>
+</Atlas>
+
