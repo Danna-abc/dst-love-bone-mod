@@ -9,7 +9,6 @@ local SpawnPrefab = GLOBAL.SpawnPrefab
 local PI = GLOBAL.PI
 local math = GLOBAL.math
 
-========== Action Define - Wangsheng Bone ==========
 local ACT_WANGSHENG = GLOBAL.Action({}, 12, false, true)
 ACT_WANGSHENG.id = "USE_WANGSHENG"
 ACT_WANGSHENG.str = "Use Wangsheng Bone"
@@ -48,7 +47,6 @@ ACT_WANGSHENG.fn = function(act)
 end
 GLOBAL.AddAction(ACT_WANGSHENG)
 
-========== Action Define - Benfu Bone ==========
 local ACT_BENFU = GLOBAL.Action({}, 12, false, true)
 ACT_BENFU.id = "USE_BENFU"
 ACT_BENFU.str = "Use Benfu Bone"
@@ -100,7 +98,6 @@ ACT_BENFU.fn = function(act)
 end
 GLOBAL.AddAction(ACT_BENFU)
 
-========== Bind Action To StateGraph (Wilson covers all characters) ==========
 local function HookStateGraph(sg)
     sg:AddActionHandler(ACT_WANGSHENG, "doshortaction")
     sg:AddActionHandler(ACT_BENFU, "doshortaction")
@@ -108,18 +105,17 @@ end
 GLOBAL.AddStategraphPostInit("wilson", HookStateGraph)
 GLOBAL.AddStategraphPostInit("wilson_client", HookStateGraph)
 
-========== Mark Skeleton When Player Die ==========
 AddPlayerPostInit(function(inst)
     local function OnBecameGhost()
         inst:DoTaskInTime(0.2, function()
-            local x, y, z = inst.Transform:GetWorldPosition()
-            local ents = TheSim:FindEntities(x, y, z, 30, {"skeleton"})
+            local px, py, pz = inst.Transform:GetWorldPosition()
+            local ents = TheSim:FindEntities(px, py, pz, 30, {"skeleton"})
             local nearest = nil
             local min_dist = math.huge
             for _, ent in ipairs(ents) do
                 if ent.prefab == "skeleton" and not ent.owner_userid then
                     local dx, dz = ent.Transform:GetWorldXZ()
-                    local dist_sq = (dx - x)*(dx - x) + (dz - z)*(dz - z)
+                    local dist_sq = (dx - px)*(dx - px) + (dz - pz)*(dz - pz)
                     if dist_sq < min_dist then
                         min_dist = dist_sq
                         nearest = ent
@@ -135,7 +131,6 @@ AddPlayerPostInit(function(inst)
     inst:ListenForEvent("ms_becameghost", OnBecameGhost)
 end)
 
-========== Drop Bone When Dig Skeleton ==========
 AddPrefabPostInit("skeleton", function(inst)
     if not TheWorld.ismastersim then return end
     inst:ListenForEvent("workfinished", function()
@@ -156,22 +151,30 @@ AddPrefabPostInit("skeleton", function(inst)
         if math.random() <= 0.52 then
             local bone2 = SpawnPrefab("benfu_bone")
             if bone2 then
-                bone2.Transform:SetPosition(x, y, z)
-                bone2.owner_userid = uid
-                bone2.player_name = name
-            end
-        end
-    end)
-end)
-
-========== Safe Register Prefab ==========
-local function SafeRegisterPrefab(name, path)
-    local ok, prefab_data = pcall(require, path)
-    if ok then
-        RegisterPrefab(name, prefab_data)
-    else
-        print("[love_bone_mod ERROR] Missing prefab file: " .. path)
-    end
-end
-SafeRegisterPrefab("wangsheng_bone", "scripts/prefabs/wangsheng_bone")
-SafeRegisterPrefab("benfu_bone", "scripts/prefabs/benfu_bone")
+                 bone2.Transform:SetPosition(x, y, z)
+                 bone2.owner_userid = uid
+                 bone2.player_name = name
+             end
+         end
+     end)
+ end)
+ AddPrefabPostInit("wangsheng_bone", function(inst)
+     if inst.components.inventoryitem then
+         inst.components.inventoryitem:AddAction(ACT_WANGSHENG)
+     end
+ end)
+ AddPrefabPostInit("benfu_bone", function(inst)
+     if inst.components.inventoryitem then
+         inst.components.inventoryitem:AddAction(ACT_BENFU)
+     end
+ end)
+ local function SafeRegisterPrefab(name, path)
+     local ok, prefab_data = pcall(require, path)
+     if ok then
+         RegisterPrefab(name, prefab_data)
+     else
+         print("[love_bone_mod ERROR] Missing prefab file: " .. path)
+     end
+ end
+ SafeRegisterPrefab("wangsheng_bone", "scripts/prefabs/wangsheng_bone")
+ SafeRegisterPrefab("benfu_bone", "scripts/prefabs/benfu_bone")
