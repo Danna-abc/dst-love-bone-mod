@@ -8,11 +8,14 @@ local TheSim = GLOBAL.TheSim
 local SpawnPrefab = GLOBAL.SpawnPrefab
 local PI = GLOBAL.PI
 local math = GLOBAL.math
+local Action = GLOBAL.Action
 
-local ACT_WANGSHENG = GLOBAL.Action({}, 12, false, true)
+local ACT_WANGSHENG = Action({}, 12, false, true)
 ACT_WANGSHENG.id = "USE_WANGSHENG"
 ACT_WANGSHENG.str = "Use Wangsheng Bone"
 ACT_WANGSHENG.fn = function(act)
+    if not TheWorld.ismastersim then return true end
+
     local user = act.doer
     local bone = act.invobject
     if not bone or not bone.death_x or not bone.death_z then
@@ -41,16 +44,17 @@ ACT_WANGSHENG.fn = function(act)
     end
 
     user.Transform:SetPosition(x, 0, z)
-    SpawnPrefab("firework_heart").Transform:SetPosition(user.Transform:GetWorldPosition())
     bone:Remove()
     return true
 end
 GLOBAL.AddAction(ACT_WANGSHENG)
 
-local ACT_BENFU = GLOBAL.Action({}, 12, false, true)
+local ACT_BENFU = Action({}, 12, false, true)
 ACT_BENFU.id = "USE_BENFU"
 ACT_BENFU.str = "Use Benfu Bone"
 ACT_BENFU.fn = function(act)
+    if not TheWorld.ismastersim then return true end
+
     local user = act.doer
     local bone = act.invobject
     if not bone or not bone.owner_userid then
@@ -93,7 +97,6 @@ ACT_BENFU.fn = function(act)
     end
 
     user.Transform:SetPosition(x, 0, z)
-    SpawnPrefab("firework_heart").Transform:SetPosition(user.Transform:GetWorldPosition())
     return true
 end
 GLOBAL.AddAction(ACT_BENFU)
@@ -107,6 +110,7 @@ GLOBAL.AddStategraphPostInit("wilson_client", HookStateGraph)
 
 AddPlayerPostInit(function(inst)
     local function OnBecameGhost()
+        if not TheWorld.ismastersim then return end
         inst:DoTaskInTime(0.2, function()
             local px, py, pz = inst.Transform:GetWorldPosition()
             local ents = TheSim:FindEntities(px, py, pz, 30, {"skeleton"})
@@ -151,30 +155,36 @@ AddPrefabPostInit("skeleton", function(inst)
         if math.random() <= 0.52 then
             local bone2 = SpawnPrefab("benfu_bone")
             if bone2 then
-                 bone2.Transform:SetPosition(x, y, z)
-                 bone2.owner_userid = uid
-                 bone2.player_name = name
-             end
-         end
-     end)
- end)
- AddPrefabPostInit("wangsheng_bone", function(inst)
-     if inst.components.inventoryitem then
-         inst.components.inventoryitem:AddAction(ACT_WANGSHENG)
-     end
- end)
- AddPrefabPostInit("benfu_bone", function(inst)
-     if inst.components.inventoryitem then
-         inst.components.inventoryitem:AddAction(ACT_BENFU)
-     end
- end)
- local function SafeRegisterPrefab(name, path)
-     local ok, prefab_data = pcall(require, path)
-     if ok then
-         RegisterPrefab(name, prefab_data)
-     else
-         print("[love_bone_mod ERROR] Missing prefab file: " .. path)
-     end
- end
- SafeRegisterPrefab("wangsheng_bone", "scripts/prefabs/wangsheng_bone")
- SafeRegisterPrefab("benfu_bone", "scripts/prefabs/benfu_bone")
+                bone2.Transform:SetPosition(x, y, z)
+                bone2.owner_userid = uid
+                bone2.player_name = name
+            end
+        end
+    end)
+end)
+
+AddPrefabPostInit("wangsheng_bone", function(inst)
+    inst:DoTaskInTime(0, function()
+        if inst.components.inventoryitem then
+            inst.components.inventoryitem:AddAction(ACT_WANGSHENG)
+        end
+    end)
+end)
+AddPrefabPostInit("benfu_bone", function(inst)
+    inst:DoTaskInTime(0, function()
+        if inst.components.inventoryitem then
+            inst.components.inventoryitem:AddAction(ACT_BENFU)
+        end
+    end)
+end)
+
+local function SafeRegisterPrefab(name, path)
+    local ok, prefab_data = pcall(require, path)
+    if ok then
+        RegisterPrefab(name, prefab_data)
+    else
+        print("[love_bone_mod ERROR] Missing prefab file: " .. path)
+    end
+end
+SafeRegisterPrefab("wangsheng_bone", "scripts/prefabs/wangsheng_bone")
+SafeRegisterPrefab("benfu_bone", "scripts/prefabs/benfu_bone")
