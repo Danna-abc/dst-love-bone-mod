@@ -127,13 +127,11 @@ end)
 AddPrefabPostInit("skeleton", function(inst)
     if not TheWorld.ismastersim then return end
     inst:ListenForEvent("workfinished", function()
-        -- 不拦截原生掉落，游戏正常产出2片普通骨片
         if inst.owner_userid ~= nil and not inst:HasTag("skeleton_ruins") then
             local x, y, z = inst.Transform:GetWorldPosition()
             local uid = inst.owner_userid
             local name = inst.player_name or "Stranger"
             
-            -- 必掉往生骨片（额外追加）
             local bone1 = SpawnPrefab("wangsheng_bone")
             if bone1 then
                 bone1.Transform:SetPosition(x, y, z)
@@ -142,13 +140,12 @@ AddPrefabPostInit("skeleton", function(inst)
                 bone1.player_name = name
                 bone1.owner_userid = uid
             end
-            -- 52%概率追加奔赴骨片
             if math.random() <= 0.52 then
                 local bone2 = SpawnPrefab("benfu_bone")
                 if bone2 then
                     bone2.Transform:SetPosition(x, y, z)
                     bone2.owner_userid = uid
-                     bone2.player_name = name
+                    bone2.player_name = name
                  end
              end
          end
@@ -167,3 +164,5 @@ AddPrefabPostInit("skeleton", function(inst)
              inst.components.inventoryitem:AddAction(ACT_BENFU)
          end
      end)
+ end)
+     
