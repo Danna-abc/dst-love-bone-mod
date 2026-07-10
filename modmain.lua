@@ -1,7 +1,4 @@
-PrefabFiles = {
-    "wangsheng_bone",
-    "benfu_bone"
-}
+PrefabFiles = {}
 
 local GLOBAL = _G
 local require = GLOBAL.require
